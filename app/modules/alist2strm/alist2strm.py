@@ -85,7 +85,7 @@ class Alist2Strm:
 
         def filter(path: AlistPath) -> bool:
             if not path.suffix.lower() in self.process_file_exts:
-                logger.debug(f"文件{path.name}不在处理列表中")
+                print(f"文件{path.name}不在处理列表中")
                 return False
 
             if self.overwrite:
@@ -94,7 +94,7 @@ class Alist2Strm:
             local_path = self.get_local_path(path)
 
             if local_path.exists():
-                logger.debug(f"文件{local_path.name}已存在，跳过处理{path.path}")
+                print(f"文件{local_path.name}已存在，跳过处理{path.path}")
                 return False
 
             return True
@@ -110,7 +110,7 @@ class Alist2Strm:
                         dir_path=self.source_dir, filter=filter
                     ):
                         _create_task(self.__file_processer(path))
-        logger.info("Alist2Strm处理完成")
+        print("Alist2Strm处理完成")
 
     @retry(Exception, tries=3, delay=3, backoff=2, logger=logger)
     async def __file_processer(self, path: AlistPath) -> None:
@@ -128,11 +128,11 @@ class Alist2Strm:
             if not _parent.exists():
                 await to_thread(_parent.mkdir, parents=True, exist_ok=True)
 
-            logger.debug(f"开始处理{local_path}")
+            print(f"开始处理{local_path}")
             if local_path.suffix == ".strm":
                 async with async_open(local_path, mode="w", encoding="utf-8") as file:
                     await file.write(url)
-                logger.debug(f"{local_path.name}创建成功")
+                print(f"{local_path.name}创建成功")
             else:
                 async with self._async_semaphore:
                     async with async_open(local_path, mode="wb") as file:
@@ -140,7 +140,7 @@ class Alist2Strm:
                         async with self.session.get(url) as resp:
                             async for chunk in resp.content.iter_chunked(1024):
                                 await _write(chunk)
-                    logger.debug(f"{local_path.name}下载成功")
+                    print(f"{local_path.name}下载成功")
         except Exception as e:
             raise RuntimeError(f"{local_path}处理失败，详细信息：{e}")
 
